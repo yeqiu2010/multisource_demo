@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.threestone.dao.xd.XdRoadLinkDao">
+    <resultMap id="ResultMap" type="com.threestone.model.XdRoadLink">
+        <result column="ROAD_LINK_ID" property="roadLinkID"/>
+        <result column="MESH" property="mesh"/>
+        <result column="GEOM" property="geom" typeHandler="com.threestone.common.mybatisTypeHandler.PointTypeHandler"/>
+    </resultMap>
+    <sql id="baseColumn">
+        "ROAD_LINK_ID","MESH","GEOM"
+    </sql>
+    <sql id="queryColumn">
+        "ROAD_LINK_ID","MESH",ST_ASEWKT("GEOM") as "GEOM"
+    </sql>
+    <select id="getXdRoadLinksByMesh" resultMap="ResultMap">
+        SELECT
+        <include refid="queryColumn"/>
+        FROM xd_road_link
+        <trim prefix="WHERE" prefixOverrides="AND|OR">
+            <if test="mesh != null">
+                AND "MESH" = #{mesh}
+            </if>
+        </trim>
+    </select>
+    <insert id="insertLinks" parameterType="java.util.List">
+        insert into xd_road_link (
+        <include refid="baseColumn" />
+        )
+        values
+        <foreach item="item" collection="list" separator=",">
+            (#{item.roadLinkID},#{item.mesh},
+            <choose>
+                <when test="item.geom != null">
+                    ST_GEOMFROMTEXT(#{item.geom, typeHandler=com.threestone.common.mybatisTypeHandler.LineStringTypeHandler})
+                </when>
+                <otherwise>
+                    NULL
+                </otherwise>
+            </choose>
+            )
+        </foreach>
+    </insert>
+</mapper>

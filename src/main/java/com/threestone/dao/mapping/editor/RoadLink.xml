@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.threestone.dao.editor.RoadLinkDao">
+    <resultMap id="ResultMap" type="com.threestone.model.RoadLink">
+        <result column="objectID" property="objectID" />
+        <result column="mesh" property="mesh" />
+        <result column="geom" property="geom"  typeHandler="com.threestone.common.mybatisTypeHandler.LineStringTypeHandler"/>
+    </resultMap>
+    <sql id="baseColumn">
+        "objectID","mesh","geom"
+    </sql>
+    <sql id="queryColumn">
+        "objectID","mesh",st_asewkt("geom") as "geom"
+    </sql>
+    <select id="getRoadLinkListByMesh" resultMap="ResultMap">
+        select
+        <include refid="queryColumn" />
+        from roadlinkshape
+        <trim prefix="WHERE" prefixOverrides="AND|OR">
+            <if test="mesh != null">
+                AND "mesh" = #{mesh}
+            </if>
+        </trim>
+        order by "objectID"
+    </select>
+    <delete id="deleteByMesh">
+        delete from roadlinkshape WHERE "mesh" = #{mesh}
+    </delete>
+</mapper>
